@@ -45,7 +45,7 @@ h1 {
 .silver { border: 3px solid silver; }
 .bronze { border: 3px solid #cd7f32; }
 
-#stats, #updated, #matchesTitle {
+#stats, #updated {
   text-align: center;
   margin-bottom: 10px;
 }
@@ -97,6 +97,11 @@ h1 {
   font-size: 13px;
   margin-top: 4px;
 }
+
+.section-title {
+  text-align: center;
+  margin: 25px 0 10px;
+}
 </style>
 </head>
 
@@ -111,9 +116,10 @@ h1 {
   <div id="stats"></div>
   <div id="updated"></div>
 
-  <h2 id="matchesTitle">⏭ Seuraavat 24h ottelut</h2>
+  <h2 class="section-title">⏭ Seuraavat 24h ottelut</h2>
   <div id="matches"></div>
 
+  <h2 class="section-title">📊 Tilanne</h2>
   <div id="list"></div>
 
 </div>
@@ -123,27 +129,6 @@ h1 {
 const API_URL = "https://script.google.com/macros/s/AKfycbxjUWbC3vZohnI2ig40tF18Z5-Ba62S6ff8QDtHhhX55nQn1TtH6B5_vS4I_ly1AfY5Dg/exec";
 
 let previousScores = JSON.parse(localStorage.getItem("prevScores") || "{}");
-
-/* =========================
-   FIX: robust date parsing
-========================= */
-function parseDate(v) {
-  if (v instanceof Date) return v;
-
-  if (!v) return new Date(NaN);
-
-  const parts = v.split(/[\s\/:]/);
-
-  // dd/mm/yyyy hh:mm:ss
-  return new Date(
-    parts[2],        // year
-    parts[1] - 1,    // month
-    parts[0],        // day
-    parts[3] || 0,
-    parts[4] || 0,
-    parts[5] || 0
-  );
-}
 
 function getClass(index) {
   if (index === 0) return "card top1";
@@ -177,38 +162,46 @@ function renderPodium(data) {
   `;
 }
 
-/* =========================
-   MATCH RENDER
-========================= */
 function renderMatches(matches) {
 
   const el = document.getElementById("matches");
   el.innerHTML = "";
 
   if (!matches || matches.length === 0) {
-    el.innerHTML = "<div class='card'>Ei tulevia otteluita 24h sisällä</div>";
+    el.innerHTML = "<div class='card'>Ei otteluita 24h sisällä</div>";
     return;
   }
 
-  matches.forEach(m => {
+  const now = Date.now();
+  const end = now + 24 * 60 * 60 * 1000;
 
-    const div = document.createElement("div");
-    div.className = "card";
+  matches
+    .map(r => ({
+      time: new Date(r[0]).getTime(),
+      match: r[1],
+      group: r[2],
+      tv: r[3]
+    }))
+    .filter(m => m.time >= now && m.time <= end)
+    .sort((a,b) => a.time - b.time)
+    .forEach(m => {
 
-    div.innerHTML = `
-      <div style="font-weight:bold">${m.match}</div>
-      <div class="match-meta">
-        ${new Date(m.time).toLocaleString("fi-FI")} • Lohko ${m.group || "-"} • 📺 ${m.tv || "-"}
-      </div>
-    `;
+      const div = document.createElement("div");
+      div.className = "card";
 
-    el.appendChild(div);
-  });
+      div.innerHTML = `
+        <div style="font-weight:bold">${m.match}</div>
+        <div class="match-meta">
+          ${new Date(m.time).toLocaleString("fi-FI")}
+          • Lohko ${m.group || "-"}
+          • 📺 ${m.tv || "-"}
+        </div>
+      `;
+
+      el.appendChild(div);
+    });
 }
 
-/* =========================
-   RANKING
-========================= */
 function render(data) {
 
   const el = document.getElementById("list");
@@ -220,15 +213,15 @@ function render(data) {
     const diff = p.total - prev;
 
     let diffText = "";
-    if (diff > 0) diffText = `<span style="color:#22c55e; margin-left:6px;">▲${diff}</span>`;
-    else if (diff < 0) diffText = `<span style="color:#ef4444; margin-left:6px;">▼${Math.abs(diff)}</span>`;
+    if (diff > 0) diffText = `<span style="color:#22c55e;margin-left:6px;">▲${diff}</span>`;
+    else if (diff < 0) diffText = `<span style="color:#ef4444;margin-left:6px;">▼${Math.abs(diff)}</span>`;
 
     const div = document.createElement("div");
     div.className = getClass(i);
 
     div.innerHTML = `
       <div>
-        <span class="name">#${i + 1} ${p.name}</span>
+        <span class="name">#${i+1} ${p.name}</span>
         <span class="points">${p.total} p${diffText}</span>
       </div>
 
@@ -245,9 +238,6 @@ function render(data) {
   });
 }
 
-/* =========================
-   LOAD DATA
-========================= */
 async function load() {
 
   try {
@@ -266,30 +256,9 @@ async function load() {
     document.getElementById("updated").innerHTML =
       `⏰ Päivitetty: ${new Date().toLocaleTimeString("fi-FI")}`;
 
-    /* =========================
-       FIXED MATCH FILTERING
-    ========================= */
-    const matchesRaw = data.nextMatches || [];
+    // 🔥 OTTELUT SUORAAN "Ottelut"-välilehdestä
+    renderMatches(data.ottelut || data.matches || []);
 
-    const now = new Date();
-    const nextMatches = matchesRaw
-      .map(r => ({
-        time: parseDate(r.time),
-        match: r.match,
-        group: r.group,
-        tv: r.tv
-      }))
-      .filter(m =>
-        m.time instanceof Date &&
-        !isNaN(m.time) &&
-        m.time > now &&
-        m.time < new Date(now.getTime() + 24 * 60 * 60 * 1000)
-      )
-      .sort((a, b) => a.time - b.time);
-
-    renderMatches(nextMatches);
-
-    /* store previous scores */
     let scoreMap = {};
     ranking.forEach(p => scoreMap[p.name] = p.total);
 
