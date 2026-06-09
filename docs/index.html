@@ -92,15 +92,13 @@ h1 {
   margin-top: 5px;
 }
 
+.match {
+  margin-bottom: 10px;
+}
+
 .match-meta {
   color: #94a3b8;
   font-size: 13px;
-  margin-top: 4px;
-}
-
-.section-title {
-  text-align: center;
-  margin: 25px 0 10px;
 }
 </style>
 </head>
@@ -116,10 +114,10 @@ h1 {
   <div id="stats"></div>
   <div id="updated"></div>
 
-  <h2 class="section-title">⏭ Seuraavat 24h ottelut</h2>
+  <h2>⏭ Ottelut</h2>
   <div id="matches"></div>
 
-  <h2 class="section-title">📊 Tilanne</h2>
+  <h2>📊 Tilanne</h2>
   <div id="list"></div>
 
 </div>
@@ -138,7 +136,6 @@ function getClass(index) {
 }
 
 function renderPodium(data) {
-
   const top3 = data.slice(0, 3);
 
   document.getElementById("podium").innerHTML = `
@@ -167,22 +164,26 @@ function renderMatches(matches) {
   const el = document.getElementById("matches");
   el.innerHTML = "";
 
-  if (!matches || matches.length === 0) {
-    el.innerHTML = "<div class='card'>Ei otteluita 24h sisällä</div>";
+  console.log("OTTELUT DEBUG:", matches);
+
+  if (!Array.isArray(matches) || matches.length === 0) {
+    el.innerHTML = "<div class='card'>Ei otteluita</div>";
     return;
   }
 
   const now = Date.now();
   const end = now + 24 * 60 * 60 * 1000;
 
-  matches
-    .map(r => ({
-      time: new Date(r[0]).getTime(),
-      match: r[1],
-      group: r[2],
-      tv: r[3]
-    }))
-    .filter(m => m.time >= now && m.time <= end)
+  const filtered = matches.filter(m =>
+    m.time && m.time >= now && m.time <= end
+  );
+
+  if (filtered.length === 0) {
+    el.innerHTML = "<div class='card'>Ei otteluita seuraavan 24h aikana</div>";
+    return;
+  }
+
+  filtered
     .sort((a,b) => a.time - b.time)
     .forEach(m => {
 
@@ -213,8 +214,8 @@ function render(data) {
     const diff = p.total - prev;
 
     let diffText = "";
-    if (diff > 0) diffText = `<span style="color:#22c55e;margin-left:6px;">▲${diff}</span>`;
-    else if (diff < 0) diffText = `<span style="color:#ef4444;margin-left:6px;">▼${Math.abs(diff)}</span>`;
+    if (diff > 0) diffText = ` <span style="color:#22c55e;">▲${diff}</span>`;
+    else if (diff < 0) diffText = ` <span style="color:#ef4444;">▼${Math.abs(diff)}</span>`;
 
     const div = document.createElement("div");
     div.className = getClass(i);
@@ -245,7 +246,9 @@ async function load() {
     const res = await fetch(API_URL);
     const data = await res.json();
 
-    const ranking = data.ranking || data;
+    console.log("API RESPONSE:", data);
+
+    const ranking = data.ranking || [];
 
     renderPodium(ranking);
     render(ranking);
@@ -256,8 +259,7 @@ async function load() {
     document.getElementById("updated").innerHTML =
       `⏰ Päivitetty: ${new Date().toLocaleTimeString("fi-FI")}`;
 
-    // 🔥 OTTELUT SUORAAN "Ottelut"-välilehdestä
-    renderMatches(data.ottelut || data.matches || []);
+    renderMatches(data.ottelut || []);
 
     let scoreMap = {};
     ranking.forEach(p => scoreMap[p.name] = p.total);
@@ -266,11 +268,9 @@ async function load() {
     previousScores = scoreMap;
 
   } catch (err) {
-
+    console.error(err);
     document.getElementById("updated").innerHTML =
       "⚠️ Tietojen lataus epäonnistui";
-
-    console.error(err);
   }
 }
 
