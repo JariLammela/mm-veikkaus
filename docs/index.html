@@ -45,16 +45,13 @@ h1 {
 .silver { border: 3px solid silver; }
 .bronze { border: 3px solid #cd7f32; }
 
-#stats {
+#stats, #updated, #matchesTitle {
   text-align: center;
   margin-bottom: 10px;
-  font-size: 18px;
 }
 
 #updated {
-  text-align: center;
   color: #94a3b8;
-  margin-bottom: 20px;
   font-size: 14px;
 }
 
@@ -94,6 +91,12 @@ h1 {
   margin-right: 5px;
   margin-top: 5px;
 }
+
+.match-meta {
+  color: #94a3b8;
+  font-size: 13px;
+  margin-top: 4px;
+}
 </style>
 </head>
 
@@ -106,8 +109,10 @@ h1 {
   <div id="podium"></div>
 
   <div id="stats"></div>
-
   <div id="updated"></div>
+
+  <h2 id="matchesTitle">⏭ Seuraavat 24h ottelut</h2>
+  <div id="matches"></div>
 
   <div id="list"></div>
 
@@ -149,6 +154,32 @@ function renderPodium(data) {
       <strong>${top3[2]?.total || 0} p</strong>
     </div>
   `;
+}
+
+function renderMatches(matches) {
+
+  const el = document.getElementById("matches");
+  el.innerHTML = "";
+
+  if (!matches || matches.length === 0) {
+    el.innerHTML = "<div class='card'>Ei tulevia otteluita 24h sisällä</div>";
+    return;
+  }
+
+  matches.forEach(m => {
+
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <div style="font-weight:bold">${m.match}</div>
+      <div class="match-meta">
+        ${new Date(m.time).toLocaleString("fi-FI")} • Lohko ${m.group || "-"} • 📺 ${m.tv || "-"}
+      </div>
+    `;
+
+    el.appendChild(div);
+  });
 }
 
 function render(data) {
@@ -194,21 +225,23 @@ async function load() {
     const res = await fetch(API_URL);
     const data = await res.json();
 
-    renderPodium(data);
+    const ranking = data.ranking || data;
+
+    renderPodium(ranking);
+    render(ranking);
 
     document.getElementById("stats").innerHTML =
-      `👥 Osallistujia: ${data.length}`;
+      `👥 Osallistujia: ${ranking.length}`;
 
     document.getElementById("updated").innerHTML =
       `⏰ Päivitetty: ${new Date().toLocaleTimeString("fi-FI")}`;
 
-    render(data);
+    renderMatches(data.nextMatches || []);
 
-    // store previous scores
     let scoreMap = {};
-    data.forEach(p => scoreMap[p.name] = p.total);
-    localStorage.setItem("prevScores", JSON.stringify(scoreMap));
+    ranking.forEach(p => scoreMap[p.name] = p.total);
 
+    localStorage.setItem("prevScores", JSON.stringify(scoreMap));
     previousScores = scoreMap;
 
   } catch (err) {
