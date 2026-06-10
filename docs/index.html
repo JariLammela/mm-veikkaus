@@ -177,7 +177,9 @@ h1 {
 
 const API_URL = "https://script.google.com/macros/s/AKfycbxjUWbC3vZohnI2ig40tF18Z5-Ba62S6ff8QDtHhhX55nQn1TtH6B5_vS4I_ly1AfY5Dg/exec";
 
+let allMatchNames = [];
 
+let actualResults = {};
 
 function getClass(index) {
   if (index === 0) return "card top1";
@@ -195,8 +197,44 @@ function renderPredictions(predictions) {
     html += `<div style="margin-top:10px;">`;
     html += `<strong>${section}</strong><br>`;
 
-    values.forEach(v => {
-      html += `• ${v}<br>`;
+    values.forEach((v, idx) => {
+
+      if (section === "Alkusarja") {
+
+        const result =
+          actualResults.Alkusarja &&
+          actualResults.Alkusarja[idx];
+
+        let icon = "⏳";
+        let extra = "";
+
+        if (result) {
+
+          if (
+            String(v).trim().toLowerCase() ===
+            String(result).trim().toLowerCase()
+          ) {
+            icon = "✅";
+          } else {
+            icon = "❌";
+            extra = ` (oikea: ${result})`;
+          }
+        }
+
+        html += `
+          <div style="margin-bottom:4px;">
+            ${icon}
+            ${allMatchNames[idx] || "Ottelu"}
+            → <strong>${v}</strong>
+            ${extra}
+          </div>
+        `;
+
+      } else {
+
+        html += `• ${v}<br>`;
+      }
+
     });
 
     html += `</div>`;
@@ -373,6 +411,9 @@ async function load() {
     console.log("OTTELUT:", data.ottelut);
 
     const ranking = data.ranking || [];
+
+    allMatchNames = data.matchNames || [];
+    actualResults = data.actualResults || {};    
 
     renderPodium(ranking);
     render(ranking);
