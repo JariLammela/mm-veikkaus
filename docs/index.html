@@ -186,6 +186,37 @@ function getClass(index) {
   return "card";
 }
 
+function renderPredictions(predictions) {
+
+  let html = "";
+
+  Object.entries(predictions).forEach(([section, values]) => {
+
+    html += `<div style="margin-top:10px;">`;
+    html += `<strong>${section}</strong><br>`;
+
+    values.forEach(v => {
+      html += `• ${v}<br>`;
+    });
+
+    html += `</div>`;
+  });
+
+  return html;
+}
+
+function toggleDetails(id) {
+
+  const el = document.getElementById(`details-${id}`);
+
+  if (el.style.display === "none") {
+    el.style.display = "block";
+  } else {
+    el.style.display = "none";
+  }
+}
+
+
 function renderPodium(data) {
 
   const top3 = data.slice(0, 3);
@@ -307,9 +338,11 @@ function render(data) {
     div.className = getClass(i);
 
     div.innerHTML = `
-      <div>
+      <div onclick="toggleDetails(${i})" style="cursor:pointer;">
+
         <span class="name">#${i+1} ${p.name}</span>
         <span class="points">${p.total} p${diffText}</span>
+
       </div>
 
       <div class="details">
@@ -319,7 +352,11 @@ function render(data) {
         <span class="badge">Top8: ${p.sections.top8 || 0}</span>
         <span class="badge">Top4: ${p.sections.top4 || 0}</span>
         <span class="badge">Loput: ${p.sections.Loput || 0}</span>
-      </div>
+     </div>
+
+     <div id="details-${i}" style="display:none; margin-top:15px;">
+       ${renderPredictions(p.predictions)}
+     </div>
     `;
 
     el.appendChild(div);
