@@ -177,7 +177,7 @@ h1 {
 
 const API_URL = "https://script.google.com/macros/s/AKfycbxjUWbC3vZohnI2ig40tF18Z5-Ba62S6ff8QDtHhhX55nQn1TtH6B5_vS4I_ly1AfY5Dg/exec";
 
-let previousScores = JSON.parse(localStorage.getItem("prevScores") || "{}");
+
 
 function getClass(index) {
   if (index === 0) return "card top1";
@@ -297,8 +297,7 @@ function render(data) {
 
   data.forEach((p, i) => {
 
-    const prev = previousScores[p.name] || 0;
-    const diff = p.total - prev;
+    const diff = p.change24h || 0;
 
     let diffText = "";
     if (diff > 0) diffText = ` <span style="color:#22c55e;">▲${diff}</span>`;
@@ -319,6 +318,7 @@ function render(data) {
         <span class="badge">Top16: ${p.sections.top16 || 0}</span>
         <span class="badge">Top8: ${p.sections.top8 || 0}</span>
         <span class="badge">Top4: ${p.sections.top4 || 0}</span>
+        <span class="badge">Loput: ${p.sections.Loput || 0}</span>
       </div>
     `;
 
@@ -348,14 +348,6 @@ async function load() {
 
     renderMatches(data.ottelut || []);
 
-    let scoreMap = {};
-
-    ranking.forEach(p => {
-      scoreMap[p.name] = p.total;
-    });
-
-    localStorage.setItem("prevScores", JSON.stringify(scoreMap));
-    previousScores = scoreMap;
 
   } catch (err) {
 
