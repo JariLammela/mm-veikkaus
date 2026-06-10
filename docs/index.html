@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="fi">
 <head>
 <meta charset="UTF-8">
@@ -100,7 +101,57 @@ h1 {
   color: #94a3b8;
   font-size: 13px;
 }
+
+/* Veikkausprosentit */
+
+.predictions {
+  margin-top: 10px;
+}
+
+.prediction-bar {
+  display: flex;
+  width: 100%;
+  height: 28px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #334155;
+  margin-bottom: 6px;
+}
+
+.prediction-home,
+.prediction-draw,
+.prediction-away {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.prediction-home {
+  background: #16a34a;
+  color: white;
+}
+
+.prediction-draw {
+  background: #ca8a04;
+  color: white;
+}
+
+.prediction-away {
+  background: #dc2626;
+  color: white;
+}
+
+.prediction-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #cbd5e1;
+}
 </style>
+
 </head>
 
 <body>
@@ -136,6 +187,7 @@ function getClass(index) {
 }
 
 function renderPodium(data) {
+
   const top3 = data.slice(0, 3);
 
   document.getElementById("podium").innerHTML = `
@@ -164,8 +216,6 @@ function renderMatches(matches) {
   const el = document.getElementById("matches");
   el.innerHTML = "";
 
-  console.log("OTTELUT DEBUG:", matches);
-
   if (!Array.isArray(matches) || matches.length === 0) {
     el.innerHTML = "<div class='card'>Ei otteluita</div>";
     return;
@@ -190,12 +240,49 @@ function renderMatches(matches) {
       const div = document.createElement("div");
       div.className = "card";
 
+      const home = parseFloat(m.homePct) || 0;
+      const draw = parseFloat(m.drawPct) || 0;
+      const away = parseFloat(m.awayPct) || 0;
+
       div.innerHTML = `
         <div style="font-weight:bold">${m.match}</div>
+
         <div class="match-meta">
           ${new Date(m.time).toLocaleString("fi-FI")}
           • Lohko ${m.group || "-"}
           • 📺 ${m.tv || "-"}
+        </div>
+
+        <div class="predictions">
+
+          <div class="prediction-bar">
+
+            <div
+              class="prediction-home"
+              style="width:${home}%">
+              ${home > 12 ? `1 ${home.toFixed(0)}%` : ""}
+            </div>
+
+            <div
+              class="prediction-draw"
+              style="width:${draw}%">
+              ${draw > 12 ? `X ${draw.toFixed(0)}%` : ""}
+            </div>
+
+            <div
+              class="prediction-away"
+              style="width:${away}%">
+              ${away > 12 ? `2 ${away.toFixed(0)}%` : ""}
+            </div>
+
+          </div>
+
+          <div class="prediction-labels">
+            <span>1: ${home.toFixed(2)}%</span>
+            <span>X: ${draw.toFixed(2)}%</span>
+            <span>2: ${away.toFixed(2)}%</span>
+          </div>
+
         </div>
       `;
 
@@ -245,8 +332,8 @@ async function load() {
 
     const res = await fetch(API_URL);
     const data = await res.json();
-
-    console.log("API RESPONSE:", data);
+    
+    console.log("OTTELUT:", data.ottelut);
 
     const ranking = data.ranking || [];
 
@@ -262,13 +349,18 @@ async function load() {
     renderMatches(data.ottelut || []);
 
     let scoreMap = {};
-    ranking.forEach(p => scoreMap[p.name] = p.total);
+
+    ranking.forEach(p => {
+      scoreMap[p.name] = p.total;
+    });
 
     localStorage.setItem("prevScores", JSON.stringify(scoreMap));
     previousScores = scoreMap;
 
   } catch (err) {
+
     console.error(err);
+
     document.getElementById("updated").innerHTML =
       "⚠️ Tietojen lataus epäonnistui";
   }
