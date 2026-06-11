@@ -305,6 +305,7 @@ function renderMatches(matches) {
 
   const now = Date.now();
   const end = now + 24 * 60 * 60 * 1000;
+  
 
   const filtered = matches.filter(m =>
     m.time && m.time >= now && m.time <= end
@@ -332,14 +333,14 @@ function renderMatches(matches) {
         <div class="match-meta">
           ${new Date(m.time).toLocaleString("fi-FI")}
           • Lohko ${m.group || "-"}
-         • 📺 ${
-           tvLogos[m.tv]
+          • 📺 ${
+            tvLogos[m.tv]
              ? `<img class="tv-logo"
                      src="${tvLogos[m.tv]}"
                      alt="${m.tv}"
                      title="${m.tv}">`
              : (m.tv || "-")
-        }
+          }
         </div>
 
         <div class="predictions">
