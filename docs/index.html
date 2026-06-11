@@ -151,12 +151,6 @@ h1 {
   color: #cbd5e1;
 }
 
-/* TV-logot */
-.tv-logo {
-  height: 24px;
-  vertical-align: middle;
-}
-
 </style>
 
 </head>
@@ -184,11 +178,6 @@ h1 {
 
 const API_URL = "https://script.google.com/macros/s/AKfycbxjUWbC3vZohnI2ig40tF18Z5-Ba62S6ff8QDtHhhX55nQn1TtH6B5_vS4I_ly1AfY5Dg/exec";
 
-const tvLogos = {
-  "YLE": "logos/Yle.svg",
-  "MTV": "logos/Mtv3.svg",
-  "MTV maksullinen": "logos/MTV_Katsomo.svg"
-};
 
 let allMatchNames = [];
 
@@ -330,18 +319,11 @@ function renderMatches(matches) {
       div.innerHTML = `
         <div style="font-weight:bold">${m.match}</div>
 
-        <div class="match-meta">
-          ${new Date(m.time).toLocaleString("fi-FI")}
-          • Lohko ${m.group || "-"}
-          • 📺 ${
-            tvLogos[m.tv]
-             ? `<img class="tv-logo"
-                     src="${tvLogos[m.tv]}"
-                     alt="${m.tv}"
-                     title="${m.tv}">`
-             : (m.tv || "-")
-          }
-        </div>
+       <div class="match-meta">
+         ${new Date(m.time).toLocaleString("fi-FI")}
+         • Lohko ${m.group || "-"}
+         • 📺 ${m.tv || "-"}
+      </div>
 
         <div class="predictions">
 
