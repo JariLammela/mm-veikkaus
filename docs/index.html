@@ -292,7 +292,7 @@ function renderMatches(matches) {
     return;
   }
 
-  const now = Date.now();
+  const start = now - 2 * 60 * 60 * 1000; 
   const end = now + 24 * 60 * 60 * 1000;
   
 
