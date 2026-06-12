@@ -378,7 +378,13 @@ function renderMatches(matches) {
         </div>
 
        <div class="match-meta">
-         ${new Date(m.time).toLocaleString("fi-FI")}
+         ${new Intl.DateTimeFormat("fi-FI", {
+           day: "numeric",
+           month: "numeric",
+           year: "numeric",
+           hour: "2-digit",
+           minute: "2-digit"
+         }).format(new Date(m.time))}
          • Lohko ${m.group || "-"}
          • ${(() => {
            const logos = {
