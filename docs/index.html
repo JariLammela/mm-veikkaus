@@ -292,12 +292,12 @@ function renderMatches(matches) {
     return;
   }
 
-  const start = now - 2 * 60 * 60 * 1000; 
+  const now = Date.now();
+  const start = now - 2 * 60 * 60 * 1000; // 2 tuntia taaksepäin
   const end = now + 24 * 60 * 60 * 1000;
-  
 
   const filtered = matches.filter(m =>
-    m.time && m.time >= now && m.time <= end
+    m.time && m.time >= start && m.time <= end
   );
 
   if (filtered.length === 0) {
@@ -316,8 +316,13 @@ function renderMatches(matches) {
       const draw = parseFloat(m.drawPct) || 0;
       const away = parseFloat(m.awayPct) || 0;
 
+      const isLive = m.time <= now && m.time >= start;
+
       div.innerHTML = `
-        <div style="font-weight:bold">${m.match}</div>
+        <div style="font-weight:bold">
+          ${m.match}
+          ${isLive ? " 🔴 KÄYNNISSÄ" : ""}
+        </div>
 
        <div class="match-meta">
          ${new Date(m.time).toLocaleString("fi-FI")}
