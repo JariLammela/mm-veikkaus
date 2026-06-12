@@ -201,6 +201,7 @@ function renderPredictions(predictions) {
 
     values.forEach((v, idx) => {
 
+      // ALKUSARJA
       if (section === "Alkusarja") {
 
         const result =
@@ -232,9 +233,62 @@ function renderPredictions(predictions) {
           </div>
         `;
 
+      // MESTARI / HOPEA / PRONSSI / MAALINTEKIJÄ
+      } else if (section === "Loput") {
+
+        const labels = [
+          "🏆 Mestari",
+          "🥈 Hopea",
+          "🥉 Pronssi",
+          "⚽ Maalintekijä"
+        ];
+
+        const result =
+          actualResults.Loput &&
+          actualResults.Loput[idx];
+
+        let icon = "⏳";
+        let extra = "";
+
+        if (result) {
+
+          if (
+            String(v).trim().toLowerCase() ===
+            String(result).trim().toLowerCase()
+          ) {
+            icon = "✅";
+          } else {
+            icon = "❌";
+            extra = ` (oikea: ${result})`;
+          }
+        }
+
+        html += `
+          <div style="margin-bottom:4px;">
+            ${icon}
+            ${labels[idx] || ""}
+            → <strong>${v}</strong>
+            ${extra}
+          </div>
+        `;
+
+      // TOP32 / TOP16 / TOP8 / TOP4
       } else {
 
-        html += `• ${v}<br>`;
+        const results = actualResults[section] || [];
+
+        const found = results.some(r =>
+          String(r).trim().toLowerCase() ===
+          String(v).trim().toLowerCase()
+        );
+
+        const icon = found ? "✅" : "⏳";
+
+        html += `
+          <div style="margin-bottom:4px;">
+            ${icon} ${v}
+          </div>
+        `;
       }
 
     });
@@ -244,7 +298,6 @@ function renderPredictions(predictions) {
 
   return html;
 }
-
 function toggleDetails(id) {
 
   const el = document.getElementById(`details-${id}`);
