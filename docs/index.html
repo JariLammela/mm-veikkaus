@@ -322,7 +322,17 @@ function renderMatches(matches) {
        <div class="match-meta">
          ${new Date(m.time).toLocaleString("fi-FI")}
          • Lohko ${m.group || "-"}
-         • 📺 ${m.tv || "-"}
+         • ${(() => {
+           const logos = {
+             'MTV': 'Mtv3.png',
+             'MTV maksullinen': 'MTV_Katsomo.png',
+             'YLE': 'Yle.png'
+           };
+           const logo = logos[m.tv];
+           return logo
+             ? `<img src="logos/${logo}" alt="${m.tv}" style="height:1em;vertical-align:middle">`
+             : `📺 ${m.tv || "-"}`;
+         })()}
       </div>
 
         <div class="predictions">
