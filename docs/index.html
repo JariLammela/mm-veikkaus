@@ -144,6 +144,20 @@ h1 {
   color: white;
 }
 
+.prediction-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  margin-right: 4px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+
 .prediction-labels {
   display: flex;
   justify-content: space-between;
@@ -406,19 +420,25 @@ function renderMatches(matches) {
             <div
               class="prediction-home"
               style="width:${home}%">
-              ${home > 12 ? `1 ${home.toFixed(0)}%` : ""}
+              ${home > 12
+                 ? `<span class="prediction-label">1</span>${home.toFixed(0)}%`
+                 : ""}
             </div>
 
             <div
               class="prediction-draw"
               style="width:${draw}%">
-              ${draw > 12 ? `X ${draw.toFixed(0)}%` : ""}
+              ${draw > 12
+                ? `<span class="prediction-label">X</span>${draw.toFixed(0)}%`
+                : ""}
             </div>
 
             <div
               class="prediction-away"
               style="width:${away}%">
-              ${away > 12 ? `2 ${away.toFixed(0)}%` : ""}
+              ${away > 12
+                 ? `<span class="prediction-label">2</span>${away.toFixed(0)}%`
+                 : ""}
             </div>
 
           </div>
